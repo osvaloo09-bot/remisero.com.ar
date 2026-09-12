@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0a1628" />
+  <title>Remisero</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;width:100%;overflow:hidden;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#000;}
+
+    .t-azul{--bg:#0a1628;--card:#0f2040;--card2:#1a3a6e;--borde:#1e4a8a;--txt:#e8f4ff;--muted:#7ab0e0;--btn:#1565c0;--btntxt:#fff;--acento:#4a90d9;--danger:#e74c3c;--success:#27ae60;--warning:#e0a800;--btnbright:#2979ff;--tipobg:#1a3a8a;--tiposel:#4a90d9;}
+    .t-celeste{--bg:#0d2137;--card:#0f2e4a;--card2:#1a4a6e;--borde:#1e5a8a;--txt:#e8f6ff;--muted:#5bb8e0;--btn:#0277bd;--btntxt:#fff;--acento:#26a0da;--danger:#e74c3c;--success:#27ae60;--warning:#e0a800;--btnbright:#00b0ff;--tipobg:#1a4a6e;--tiposel:#26a0da;}
+    .t-violeta{--bg:#1a0a2e;--card:#2a1040;--card2:#3a1a5e;--borde:#5a2a8e;--txt:#f0e8ff;--muted:#b07ad0;--btn:#7b2fa0;--btntxt:#fff;--acento:#9b59b6;--danger:#e74c3c;--success:#27ae60;--warning:#e0a800;--btnbright:#d500f9;--tipobg:#3a1a5e;--tiposel:#9b59b6;}
+    .t-verde{--bg:#0a1a0a;--card:#122212;--card2:#1e3a1e;--borde:#2a5a2a;--txt:#e8f8e8;--muted:#5ab85a;--btn:#2e7d00;--btntxt:#fff;--acento:#4caf00;--danger:#e74c3c;--success:#4caf00;--warning:#e0a800;--btnbright:#76ff03;--tipobg:#1e3a1e;--tiposel:#4caf00;}
+    .t-dorado{--bg:#1a1200;--card:#2a1e00;--card2:#3a2e00;--borde:#5a4a00;--txt:#fff8e8;--muted:#c8a030;--btn:#c47f00;--btntxt:#fff;--acento:#f0a500;--danger:#e74c3c;--success:#27ae60;--warning:#f0a500;--btnbright:#ffea00;--tipobg:#3a2e00;--tiposel:#f0a500;}
+    .t-rojo{--bg:#1a0a0a;--card:#2e1010;--card2:#3e1a1a;--borde:#6a2020;--txt:#fff0f0;--muted:#d07070;--btn:#c0392b;--btntxt:#fff;--acento:#e74c3c;--danger:#e74c3c;--success:#27ae60;--warning:#e0a800;--btnbright:#ff1744;--tipobg:#3e1a1a;--tiposel:#e74c3c;}
+
+    #app{height:100vh;width:100%;background:var(--bg);overflow-y:auto;scrollbar-width:none;transition:background .3s;}
+    #app::-webkit-scrollbar{display:none;}
+    .wrap{padding:16px;min-height:100vh;}
+    .status-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 0 14px;font-size:14px;font-weight:700;color:var(--muted);}
+    .status-rol{font-size:12px;background:var(--card);border:1px solid var(--borde);border-radius:12px;padding:3px 10px;}
+    .pantalla{display:none;}
+    .pantalla.activa{display:block;}
+    .card{background:var(--card);border-radius:18px;border:1.5px solid var(--borde);padding:18px;margin-bottom:14px;}
+
+    /* INPUTS */
+    .lbl{font-size:16px;color:var(--muted);margin-bottom:8px;display:block;font-weight:600;}
+    .inp{width:100%;border:2px solid var(--borde);border-radius:14px;padding:16px 18px;background:var(--card2);color:var(--txt);font-size:20px;font-family:inherit;outline:none;}
+    .inp:focus{border-color:var(--acento);}
+    .inp::placeholder{color:var(--muted);opacity:.6;}
+    .inp-monto{font-size:34px;font-weight:700;}
+
+    /* BOTÓN PRINCIPAL — GRANDE Y FOSFORESCENTE */
+    .btn-main{
+      width:100%;padding:22px;border-radius:16px;
+      font-size:22px;font-weight:800;cursor:pointer;border:none;
+      background:var(--btnbright);color:#000;
+      margin-top:8px;font-family:inherit;
+      letter-spacing:.5px;
+      box-shadow:0 0 20px var(--btnbright), 0 4px 12px rgba(0,0,0,.4);
+      transition:opacity .2s, transform .1s;
+    }
+    .btn-main:active{opacity:.85;transform:scale(0.98);}
+
+    /* BOTÓN SECUNDARIO */
+    .btn-sec{font-size:14px;padding:12px 16px;border-radius:12px;cursor:pointer;border:2px solid var(--borde);background:var(--card2);color:var(--muted);font-weight:700;font-family:inherit;}
+    .btn-danger{color:var(--danger)!important;border-color:var(--danger)!important;}
+    .btn-success{color:var(--success)!important;border-color:var(--success)!important;}
+
+    /* BOTONES TIPO — VIAJE, COMBUSTIBLE, ETC */
+    .btn-tipo{
+      flex:1;padding:16px 4px;border-radius:16px;
+      font-size:14px;font-weight:800;cursor:pointer;
+      border:3px solid var(--borde);
+      background:var(--card2);color:var(--muted);
+      text-align:center;line-height:1.6;font-family:inherit;
+      transition:all .2s;
+    }
+    .btn-tipo.on{
+      border:3px solid var(--btnbright);
+      background:var(--tipobg);
+      color:var(--btnbright);
+      box-shadow:0 0 14px var(--btnbright), inset 0 0 8px rgba(255,255,255,.05);
+      font-size:15px;
+    }
+
+    /* BOTONES PAGO — EFECTIVO / VIRTUAL */
+    .btn-pago{
+      flex:1;padding:16px 6px;border-radius:14px;
+      font-size:16px;font-weight:700;cursor:pointer;
+      border:3px solid var(--borde);
+      background:var(--card2);color:var(--muted);
+      text-align:center;font-family:inherit;
+      transition:all .2s;
+    }
+    .btn-pago.on{
+      border:3px solid var(--btnbright);
+      background:var(--tipobg);
+      color:var(--btnbright);
+      box-shadow:0 0 12px var(--btnbright);
+    }
+
+    /* STATS */
+    .stat{background:var(--card2);border-radius:12px;padding:13px;}
+    .sl{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+    .sv{font-size:21px;font-weight:700;color:var(--txt);margin:0;}
+    .sv.g{color:var(--btnbright);}
+    .sv.r{color:var(--danger);}
+    .stat-dest{grid-column:span 2;border:2px solid var(--btnbright);box-shadow:0 0 10px var(--btnbright);}
+
+    /* SORTEO BADGE */
+    .badge-sorteo{
+      background:var(--btnbright);color:#000;
+      border-radius:12px;padding:7px 18px;
+      font-size:20px;font-weight:800;letter-spacing:3px;
+      box-shadow:0 0 14px var(--btnbright);
+    }
+
+    /* FILAS */
+    .fila{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1.5px solid var(--borde);}
+    .fila:last-child{border-bottom:none;}
+    .fila p{margin:0;}
+
+    /* TABS */
+    .tabs{display:flex;gap:6px;background:var(--card);border-radius:12px;padding:6px;margin-bottom:14px;}
+    .tab-btn{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:inherit;}
+    .tab-btn.on{background:var(--btnbright);color:#000;box-shadow:0 0 10px var(--btnbright);}
+
+    /* LOGO */
+    .logo-circle{width:86px;height:86px;border-radius:50%;background:var(--btnbright);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 0 24px var(--btnbright);}
+
+    /* INFO TIP */
+    .info-tip{background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:4px;border-left:3px solid var(--btnbright);}
+    .info-tip p{font-size:13px;color:var(--muted);font-weight:600;line-height:1.5;}
+
+    /* ALERTAS */
+    .alerta{background:rgba(224,168,0,.15);border:2px solid var(--warning);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .prog-row{background:rgba(39,174,96,.1);border:2px solid var(--success);border-radius:12px;padding:12px;margin-bottom:8px;}
+
+    /* NOTIFICACION */
+    .notif{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--btnbright);color:#000;border-radius:14px;padding:14px 20px;font-size:16px;font-weight:800;z-index:500;box-shadow:0 0 20px var(--btnbright);display:none;max-width:90%;text-align:center;}
+    .notif.on{display:block;}
+
+    /* COMPARTIR */
+    .btn-comp{width:100%;padding:18px;border-radius:14px;font-size:18px;font-weight:700;cursor:pointer;border:none;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;}
+
+    /* BADGES */
+    .badge-on{background:#1e4d1e;color:#6fcf6f;border-radius:14px;padding:4px 12px;font-size:13px;font-weight:600;}
+    .badge-off{background:#4d1e1e;color:#e07070;border-radius:14px;padding:4px 12px;font-size:13px;font-weight:600;}
+
+    /* TEMAS */
+    .temas-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .temas-overlay.v{opacity:1;pointer-events:all;}
+    .temas-panel{background:#111;border-radius:24px 24px 0 0;padding:22px;width:100%;max-width:480px;}
+    .temas-grilla{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+    .tema-op{border-radius:14px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;}
+    .tema-op.on{border-color:#fff;}
+    .tema-preview{height:72px;display:flex;align-items:center;justify-content:center;}
+    .tema-dot{width:30px;height:30px;border-radius:50%;}
+    .tema-nombre{font-size:12px;font-weight:700;color:#fff;text-align:center;padding:6px;background:rgba(0,0,0,.5);}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .modal-overlay.v{opacity:1;pointer-events:all;}
+    .modal-panel{background:#111;border-radius:24px 24px 0 0;padding:22px;width:100%;max-width:480px;}
+
+    /* USUARIO ROW ADMIN */
+    .usuario-row{background:var(--card2);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--borde);}
+
+    /* TURNO CARD */
+    .turno-num{font-size:72px;font-weight:800;color:var(--btnbright);line-height:1;margin:10px 0;text-shadow:0 0 20px var(--btnbright);}
+  </style>
+</head>
+<body>
+<div class="t-azul" id="app">
+<div class="wrap">
+  <div class="status-bar">
+    <span id="hora-s">9:41</span>
+    <span id="status-rol" class="status-rol" style="display:none;color:var(--muted);"></span>
+    <span>📶 🔋</span>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="pantalla activa" id="p-login">
+    <div style="text-align:center;padding:18px 0 24px;">
+      <div class="logo-circle">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="#000"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/><circle cx="7.5" cy="14.5" r="1.5" fill="#000"/><circle cx="16.5" cy="14.5" r="1.5" fill="#000"/></svg>
+      </div>
+      <p style="font-size:30px;font-weight:800;color:var(--txt);">Remisero</p>
+      <p style="font-size:15px;color:var(--muted);margin-top:6px;">Tu cuaderno digital profesional</p>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:16px;"><label class="lbl">👤 Usuario o teléfono</label><input type="text" id="l-user" placeholder="Ej: 2494123456" class="inp" autocomplete="username"/></div>
+      <div style="margin-bottom:16px;"><label class="lbl">🔒 Contraseña</label>
+        <div style="position:relative;"><input type="password" id="l-pass" placeholder="••••••••" class="inp" style="padding-right:58px;" autocomplete="current-password"/><button onclick="toggleOjo()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:26px;" id="ojo">👁</button></div>
+      </div>
+      <p style="font-size:14px;color:var(--danger);margin-bottom:10px;display:none;font-weight:600;" id="l-err">⚠️ Usuario o contraseña incorrectos.</p>
+      <button class="btn-main" id="btn-login" onclick="login()">🚗 Entrar a mi turno</button>
+      <div style="background:var(--card2);border-radius:14px;padding:14px;margin-top:14px;text-align:center;">
+        <p style="font-size:14px;color:var(--muted);font-weight:600;margin-bottom:8px;">📞 Suscribite a Remisero</p>
+        <a href="tel:2494480417" style="display:block;font-size:22px;font-weight:800;color:var(--btnbright);text-decoration:none;margin-bottom:6px;text-shadow:0 0 10px var(--btnbright);">📱 2494 480417</a>
+        <a href="mailto:osvaldo09@gmail.com" style="display:block;font-size:15px;font-weight:600;color:var(--muted);text-decoration:none;">✉️ osvaldo09@gmail.com</a>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <button onclick="abrirTemas()" style="background:none;border:2px solid var(--borde);border-radius:20px;padding:10px 24px;color:var(--muted);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">🎨 Elegí tu color</button>
+    </div>
+  </div>
+
+  <!-- BIENVENIDA -->
+  <div class="pantalla" id="p-bienvenida">
+    <div class="card" style="text-align:center;padding:32px 16px;">
+      <p style="font-size:15px;color:var(--muted);font-weight:600;">¡Buen turno!</p>
+      <div class="turno-num" id="bv-num">—</div>
+      <p style="font-size:24px;font-weight:700;color:var(--txt);margin-bottom:6px;" id="bv-nombre"></p>
+      <p style="font-size:15px;color:var(--muted);margin-bottom:28px;" id="bv-hora"></p>
+      <div style="background:var(--card2);border-radius:14px;padding:16px;margin-bottom:22px;">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:600;">🎰 Tu número de sorteo del mes</p>
+        <span class="badge-sorteo" id="bv-sorteo">---</span>
+      </div>
+      <button class="btn-main" onclick="irApp()">🚗 Arrancar turno</button>
+    </div>
+  </div>
+
+  <!-- APP CHOFER -->
+  <div class="pantalla" id="p-chofer">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div>
+        <p style="font-size:13px;color:var(--muted);font-weight:600;" id="modo-lbl">Turno día ☀️</p>
+        <p style="font-size:36px;font-weight:800;color:var(--txt);line-height:1;" id="tot">$0</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;" id="nreg">0 registros</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <div style="display:flex;gap:6px;">
+          <button onclick="abrirTemas()" style="background:var(--card);border:2px solid var(--borde);border-radius:20px;padding:10px 12px;cursor:pointer;font-size:16px;">🎨</button>
+          <button style="display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--borde);border-radius:20px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700;color:var(--txt);font-family:inherit;" onclick="toggleModo()"><span id="tog-ico">🌙</span><span id="tog-txt">Día</span></button>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-size:12px;color:var(--muted);">Tu parte (30%)</p>
+          <p style="font-size:28px;font-weight:800;color:var(--btnbright);text-shadow:0 0 10px var(--btnbright);" id="mi-parte">$0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;">
+      <div><p style="font-size:14px;color:var(--txt);font-weight:700;">🎰 Sorteo del mes</p><p style="font-size:12px;color:var(--muted);margin-top:3px;">Registrá cada viaje para participar</p></div>
+      <span class="badge-sorteo" id="ch-sorteo">---</span>
+    </div>
+
+    <div id="reservas-pend"></div>
+
+    <div class="card">
+      <p style="font-size:15px;color:var(--muted);font-weight:700;margin-bottom:14px;">¿Qué registrás?</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn-tipo on" id="t-viaje"   onclick="setTipo('viaje')">🚗<br>Viaje</button>
+        <button class="btn-tipo"    id="t-comb"    onclick="setTipo('comb')">⛽<br>Combustible</button>
+        <button class="btn-tipo"    id="t-gasto"   onclick="setTipo('gasto')">🍫<br>Gasto</button>
+        <button class="btn-tipo"    id="t-reserva" onclick="setTipo('reserva')">⏰<br>Reserva</button>
+      </div>
+
+      <div id="form-viaje">
+        <div style="margin-bottom:12px;"><label class="lbl">Monto del viaje</label><input type="number" id="v-monto" placeholder="$0" inputmode="numeric" class="inp inp-monto"/></div>
+        <div style="margin-bottom:12px;"><label class="lbl">Referencia (opcional)</label><input type="text" id="v-ref" placeholder="centro, hospital, barrio..." class="inp"/></div>
+        <div style="margin-bottom:14px;"><label class="lbl" style="margin-bottom:8px;">Forma de pago</label>
+          <div style="display:flex;gap:8px;"><button class="btn-pago on" id="b-ef" onclick="setPago('ef')">💵 Efectivo</button><button class="btn-pago" id="b-vt" onclick="setPago('vt')">📱 Virtual</button></div>
+        </div>
+      </div>
+
+      <div id="form-comb" style="display:none;">
+        <div style="margin-bottom:12px;"><label class="lbl">Monto del ticket</label><input type="number" id="c-monto" placeholder="$0" inputmode="numeric" class="inp inp-monto"/></div>
+        <div style="margin-bottom:14px;"><label class="lbl" style="margin-bottom:8px;">Estación</label>
+          <div style="display:flex;gap:8px;"><button class="btn-pago on" id="b-gnc" onclick="setEst('GNC')">🔵 GNC</button><button class="btn-pago" id="b-ypf" onclick="setEst('YPF')">🔴 YPF</button><button class="btn-pago" id="b-otra" onclick="setEst('Otra')">⚪ Otra</button></div>
+        </div>
+        <div class="info-tip"><p>💡 El 10% de reintegro se acumula mes a mes. ¡Guardá los tickets!</p></div>
+      </div>
+
+      <div id="form-gasto" style="display:none;">
+        <div style="margin-bottom:12px;"><label class="lbl">Monto del gasto</label><input type="number" id="g-monto" placeholder="$0" inputmode="numeric" class="inp inp-monto"/></div>
+        <div style="margin-bottom:12px;"><label class="lbl">¿Qué fue?</label><input type="text" id="g-desc" placeholder="puchos, agua, chocolate..." class="inp"/></div>
+        <div class="info-tip"><p>💡 Aunque sea poco, registrarlo evita confusiones al cierre del turno.</p></div>
+      </div>
+
+      <div id="form-reserva" style="display:none;">
+        <div style="margin-bottom:12px;"><label class="lbl">¿A quién vas a buscar?</label><input type="text" id="r-desc" placeholder="María del centro, chicos del colegio..." class="inp"/></div>
+        <div style="margin-bottom:12px;"><label class="lbl">¿En cuántos minutos?</label>
+          <select id="r-mins" class="inp" style="font-size:19px;"><option value="15">En 15 minutos</option><option value="30" selected>En 30 minutos</option><option value="60">En 1 hora</option><option value="120">En 2 horas</option></select>
+        </div>
+        <div style="margin-bottom:12px;"><label class="lbl">Monto estimado (opcional)</label><input type="number" id="r-monto" placeholder="$0" inputmode="numeric" class="inp"/></div>
+        <div class="info-tip"><p>⏰ Te avisa 5 minutos antes para que no se te escape el viaje.</p></div>
+      </div>
+
+      <p style="font-size:14px;color:var(--danger);margin-bottom:10px;display:none;font-weight:600;" id="v-err">Ingresá los datos para continuar.</p>
+      <button class="btn-main" id="btn-guardar" onclick="guardar()">＋ Guardar viaje</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <p style="font-size:15px;color:var(--muted);font-weight:700;margin:0;">📅 Viajes fijos</p>
+        <button class="btn-sec" onclick="abrirProg()">＋ Agregar</button>
+      </div>
+      <div id="lista-prog"><p style="font-size:14px;color:var(--muted);text-align:center;padding:10px 0;">Sin viajes fijos aún. Agregá uno para que no se olvide nunca.</p></div>
+    </div>
+
+    <div class="card">
+      <p style="font-size:15px;color:var(--muted);font-weight:700;margin-bottom:13px;">Resumen del turno</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="stat"><p class="sl">Total viajes</p><p class="sv g" id="r-tot">$0</p></div>
+        <div class="stat"><p class="sl">Chofer (30%)</p><p class="sv g" id="r-ch">$0</p></div>
+        <div class="stat"><p class="sl">Agencia (22%)</p><p class="sv" id="r-ag">$0</p></div>
+        <div class="stat"><p class="sl">Dueño bruto (48%)</p><p class="sv" id="r-du">$0</p></div>
+        <div class="stat"><p class="sl">⛽ Combustible</p><p class="sv r" id="r-cb">$0</p></div>
+        <div class="stat"><p class="sl">🍫 Gastos</p><p class="sv r" id="r-gs">$0</p></div>
+        <div class="stat stat-dest"><p class="sl">💰 Dueño neto</p><p class="sv g" id="r-neto" style="font-size:26px;">$0</p></div>
+        <div class="stat"><p class="sl">💵 Efectivo</p><p class="sv" id="r-ef">$0</p></div>
+        <div class="stat"><p class="sl">📱 Virtual</p><p class="sv" id="r-vt">$0</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <p style="font-size:15px;color:var(--muted);font-weight:700;margin:0;">Todo registrado hoy</p>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sec" style="background:var(--btnbright);color:#000;border-color:var(--btnbright);box-shadow:0 0 10px var(--btnbright);" onclick="irCierre()">Cerrar turno</button>
+          <button class="btn-sec btn-danger" onclick="salir()">Salir</button>
+        </div>
+      </div>
+      <div id="lista-ch"><p style="font-size:15px;color:var(--muted);text-align:center;padding:16px 0;line-height:1.6;">Todavía no hay registros.<br>¡Arrancá con el primer viaje!</p></div>
+    </div>
+  </div>
+
+  <!-- CIERRE -->
+  <div class="pantalla" id="p-cierre">
+    <div style="text-align:center;padding:16px 0 20px;">
+      <div style="font-size:54px;margin-bottom:10px;">🎉</div>
+      <p style="font-size:26px;font-weight:800;color:var(--txt);">¡Turno cerrado!</p>
+      <p style="font-size:15px;color:var(--muted);margin-top:6px;" id="c-fecha"></p>
+    </div>
+    <div class="card">
+      <div style="text-align:center;padding:10px 0 16px;border-bottom:1.5px solid var(--borde);margin-bottom:14px;">
+        <p style="font-size:14px;color:var(--muted);" id="c-nombre"></p>
+        <p style="font-size:38px;font-weight:800;color:var(--txt);" id="c-tot"></p>
+        <p style="font-size:14px;color:var(--muted);" id="c-vj"></p>
+      </div>
+      <div class="fila"><p style="font-size:17px;color:var(--muted);">🧑 Tu parte (30%)</p><p style="font-size:24px;font-weight:800;color:var(--btnbright);text-shadow:0 0 8px var(--btnbright);" id="c-ch"></p></div>
+      <div class="fila"><p style="font-size:17px;color:var(--muted);">🏢 Agencia (22%)</p><p style="font-size:20px;font-weight:700;color:var(--txt);" id="c-ag"></p></div>
+      <div class="fila"><p style="font-size:17px;color:var(--muted);">⛽ Combustible</p><p style="font-size:20px;font-weight:700;color:var(--danger);" id="c-cb"></p></div>
+      <div class="fila"><p style="font-size:17px;color:var(--muted);">🍫 Gastos chicos</p><p style="font-size:20px;font-weight:700;color:var(--danger);" id="c-gs"></p></div>
+      <div class="fila"><p style="font-size:17px;color:var(--muted);">🔄 Reintegro est./mes</p><p style="font-size:20px;font-weight:700;color:var(--btnbright);" id="c-rei"></p></div>
+      <div class="fila"><p style="font-size:17px;color:var(--txt);font-weight:700;">💰 Dueño neto</p><p style="font-size:26px;font-weight:800;color:var(--btnbright);text-shadow:0 0 10px var(--btnbright);" id="c-nt"></p></div>
+    </div>
+    <div class="card">
+      <p style="font-size:15px;color:var(--muted);font-weight:700;margin-bottom:13px;">Compartir resumen</p>
+      <button class="btn-comp" style="background:#25D366;color:#fff;" onclick="irWA()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp al dueño
+      </button>
+      <button class="btn-comp" style="background:#ea4335;color:#fff;" onclick="irEmail()">📧 Enviar por email</button>
+      <button style="width:100%;padding:18px;border-radius:14px;font-size:18px;font-weight:700;cursor:pointer;border:2px solid var(--borde);background:transparent;color:var(--txt);margin-top:4px;font-family:inherit;" onclick="nuevoTurno()">🔄 Nuevo turno</button>
+    </div>
+  </div>
+
+  <!-- VISTA DUEÑO -->
+  <div class="pantalla" id="p-dueno">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div><p style="font-size:13px;color:var(--muted);font-weight:600;">Vista del dueño</p><p style="font-size:26px;font-weight:800;color:var(--txt);" id="d-nombre"></p></div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="abrirTemas()" style="background:var(--card);border:2px solid var(--borde);border-radius:20px;padding:10px 12px;cursor:pointer;font-size:16px;">🎨</button>
+        <button class="btn-sec btn-danger" onclick="salir()">Salir</button>
+      </div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;">
+      <p style="font-size:14px;color:var(--txt);font-weight:700;">🎰 Tu número del sorteo</p>
+      <span class="badge-sorteo" id="d-sorteo">---</span>
+    </div>
+    <div class="card">
+      <p style="font-size:15px;color:var(--muted);font-weight:700;margin-bottom:13px;">Resumen de hoy</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="stat"><p class="sl">Total facturado</p><p class="sv g">$0</p></div>
+        <div class="stat"><p class="sl">Agencia (22%)</p><p class="sv">$0</p></div>
+        <div class="stat"><p class="sl">⛽ Combustible</p><p class="sv r">$0</p></div>
+        <div class="stat"><p class="sl">🍫 Gastos</p><p class="sv r">$0</p></div>
+        <div class="stat stat-dest"><p class="sl">💰 Tu parte neta</p><p class="sv g" style="font-size:26px;">$0</p></div>
+      </div>
+      <div class="info-tip" style="margin-top:12px;margin-bottom:0;"><p>ℹ️ Como dueño pagás solo el 22% a la agencia. Combustible y gastos se descuentan de tu parte.</p></div>
+    </div>
+  </div>
+
+  <!-- PANEL ADMIN -->
+  <div class="pantalla" id="p-admin">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div><p style="font-size:13px;color:var(--muted);font-weight:600;">Panel administrador</p><p style="font-size:24px;font-weight:800;color:var(--txt);">Remisero</p></div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="abrirTemas()" style="background:var(--card);border:2px solid var(--borde);border-radius:20px;padding:10px 12px;cursor:pointer;font-size:16px;">🎨</button>
+        <button class="btn-sec btn-danger" onclick="salir()">Salir</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn on" id="tab-u" onclick="mostrarTab('u')">👥 Usuarios</button>
+      <button class="tab-btn" id="tab-s" onclick="mostrarTab('s')">🎰 Sorteo</button>
+      <button class="tab-btn" id="tab-n" onclick="mostrarTab('n')">➕ Nuevo</button>
+    </div>
+    <div id="sec-u">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div class="stat"><p class="sl">Activos</p><p class="sv g" id="a-act">0</p></div>
+        <div class="stat"><p class="sl">Ingresos/mes</p><p class="sv g" id="a-ing">$0</p></div>
+      </div>
+      <div id="lista-admin"><p style="color:var(--muted);text-align:center;padding:20px;">Cargando...</p></div>
+    </div>
+    <div id="sec-s" style="display:none;">
+      <div class="card" style="text-align:center;padding:26px;">
+        <p style="font-size:16px;color:var(--muted);font-weight:600;margin-bottom:16px;">Sorteo mensual Remisero</p>
+        <div style="font-size:90px;margin-bottom:16px;line-height:1;" id="sort-disp">🎲</div>
+        <button class="btn-main" onclick="realizarSorteo()">🎰 ¡Realizar sorteo!</button>
+        <div id="sort-gan" style="display:none;margin-top:20px;padding-top:16px;border-top:1.5px solid var(--borde);">
+          <p style="font-size:14px;color:var(--muted);margin-bottom:8px;">🏆 ¡Ganador!</p>
+          <p style="font-size:22px;font-weight:800;color:var(--btnbright);" id="sort-nombre"></p>
+          <p style="font-size:28px;font-weight:800;color:var(--txt);margin-top:8px;" id="sort-num"></p>
+        </div>
+      </div>
+      <div class="card"><p style="font-size:15px;color:var(--muted);font-weight:700;margin-bottom:12px;">Números asignados</p><div id="lista-nums"></div></div>
+    </div>
+    <div id="sec-n" style="display:none;">
+      <div class="card">
+        <p style="font-size:15px;color:var(--muted);font-weight:700;margin-bottom:14px;">Agregar nuevo usuario</p>
+        <div style="margin-bottom:12px;"><label class="lbl">Nombre completo</label><input type="text" id="n-nombre" placeholder="Nombre del chofer o dueño" class="inp"/></div>
+        <div style="margin-bottom:12px;"><label class="lbl">Teléfono / usuario</label><input type="text" id="n-tel" placeholder="Ej: 2494123456" class="inp"/></div>
+        <div style="margin-bottom:12px;"><label class="lbl">Contraseña inicial</label><input type="text" id="n-pass" placeholder="La puede cambiar después" class="inp"/></div>
+        <div style="margin-bottom:16px;"><label class="lbl" style="margin-bottom:8px;">Tipo de usuario</label>
+          <div style="display:flex;gap:8px;"><button class="btn-pago on" id="r-ch" onclick="setRol('chofer')">🚗 Chofer</button><button class="btn-pago" id="r-du" onclick="setRol('dueno')">🚘 Dueño</button></div>
+        </div>
+        <div class="info-tip" style="margin-bottom:14px;"><p>🎰 Se asigna número de sorteo automáticamente.</p></div>
+        <p style="font-size:14px;color:var(--danger);margin-bottom:10px;display:none;font-weight:600;" id="n-err">Completá todos los campos.</p>
+        <button class="btn-main" id="btn-agregar" onclick="agregarUsuario()">➕ Agregar usuario</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- SELECTOR TEMAS -->
+<div class="temas-overlay" id="temas-ov" onclick="cerrarTemas(event)">
+  <div class="temas-panel" onclick="event.stopPropagation()">
+    <p style="color:#fff;font-size:19px;font-weight:700;margin-bottom:6px;text-align:center;">🎨 Elegí tu color</p>
+    <p style="color:#888;font-size:13px;margin-bottom:16px;text-align:center;">Se guarda automáticamente</p>
+    <div class="temas-grilla">
+      <div class="tema-op on" id="tema-azul" onclick="setTema('azul')"><div class="tema-preview" style="background:linear-gradient(135deg,#0a1628,#1a3a6e);"><div class="tema-dot" style="background:#2979ff;box-shadow:0 0 10px #2979ff;"></div></div><div class="tema-nombre">Azul</div></div>
+      <div class="tema-op" id="tema-celeste" onclick="setTema('celeste')"><div class="tema-preview" style="background:linear-gradient(135deg,#0d2137,#1a4a6e);"><div class="tema-dot" style="background:#00b0ff;box-shadow:0 0 10px #00b0ff;"></div></div><div class="tema-nombre">Celeste</div></div>
+      <div class="tema-op" id="tema-violeta" onclick="setTema('violeta')"><div class="tema-preview" style="background:linear-gradient(135deg,#1a0a2e,#4a1a6e);"><div class="tema-dot" style="background:#d500f9;box-shadow:0 0 10px #d500f9;"></div></div><div class="tema-nombre">Violeta</div></div>
+      <div class="tema-op" id="tema-verde" onclick="setTema('verde')"><div class="tema-preview" style="background:linear-gradient(135deg,#0a1a0a,#1e3a1e);"><div class="tema-dot" style="background:#76ff03;box-shadow:0 0 10px #76ff03;"></div></div><div class="tema-nombre">Verde</div></div>
+      <div class="tema-op" id="tema-dorado" onclick="setTema('dorado')"><div class="tema-preview" style="background:linear-gradient(135deg,#1a1200,#4a3500);"><div class="tema-dot" style="background:#ffea00;box-shadow:0 0 10px #ffea00;"></div></div><div class="tema-nombre">Dorado</div></div>
+      <div class="tema-op" id="tema-rojo" onclick="setTema('rojo')"><div class="tema-preview" style="background:linear-gradient(135deg,#1a0a0a,#5a1a1a);"><div class="tema-dot" style="background:#ff1744;box-shadow:0 0 10px #ff1744;"></div></div><div class="tema-nombre">Rojo</div></div>
+    </div>
+    <button style="width:100%;padding:15px;border-radius:12px;font-size:17px;font-weight:700;border:none;background:#333;color:#fff;cursor:pointer;font-family:inherit;" onclick="cerrarTemas()">✓ Listo</button>
+  </div>
+</div>
+
+<!-- MODAL VIAJE PROGRAMADO -->
+<div class="modal-overlay" id="modal-prog" onclick="cerrarProg(event)">
+  <div class="modal-panel" onclick="event.stopPropagation()">
+    <p style="color:#fff;font-size:18px;font-weight:700;margin-bottom:16px;">📅 Viaje fijo programado</p>
+    <div style="margin-bottom:12px;"><label style="font-size:14px;color:#aaa;display:block;margin-bottom:6px;font-weight:600;">Descripción</label><input type="text" id="prog-desc" placeholder="Ej: Chicos del colegio San José" style="width:100%;border:2px solid #333;border-radius:12px;padding:14px;background:#222;color:#fff;font-size:17px;font-family:inherit;"/></div>
+    <div style="margin-bottom:12px;"><label style="font-size:14px;color:#aaa;display:block;margin-bottom:6px;font-weight:600;">Horario</label><input type="time" id="prog-hora" style="width:100%;border:2px solid #333;border-radius:12px;padding:14px;background:#222;color:#fff;font-size:17px;font-family:inherit;"/></div>
+    <div style="margin-bottom:16px;"><label style="font-size:14px;color:#aaa;display:block;margin-bottom:6px;font-weight:600;">Monto habitual (opcional)</label><input type="number" id="prog-monto" placeholder="$0" inputmode="numeric" style="width:100%;border:2px solid #333;border-radius:12px;padding:14px;background:#222;color:#fff;font-size:22px;font-family:inherit;"/></div>
+    <button onclick="guardarProg()" style="width:100%;padding:16px;border-radius:12px;font-size:18px;font-weight:700;border:none;background:#2979ff;color:#fff;cursor:pointer;margin-bottom:10px;font-family:inherit;box-shadow:0 0 14px #2979ff;">✓ Guardar viaje fijo</button>
+    <button onclick="cerrarProg()" style="width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:600;border:none;background:#333;color:#fff;cursor:pointer;font-family:inherit;">Cancelar</button>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+  const SUPABASE_URL='https://gwhszvwnjilnuokrlzon.supabase.co';
+  const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3aHN6dnduamlsbnVva3Jsem9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNDc0MTAsImV4cCI6MjEwNDYyMzQxMH0.Cpd5vShUOJm6rQp7b72VoyodUDfpTB9W7rU6MSiGhhc';
+  const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const PRECIO=10000;
+  let registros=[],reservas=[],programados=[],pago='ef',estacion='GNC',tipo='viaje',noche=false,usuario=null,rolNuevo='chofer',timers=[];
+
+  function fmt(n){return'$'+Math.round(n).toLocaleString('es-AR');}
+  function horaA(){const h=new Date();return h.getHours()+':'+(h.getMinutes()<10?'0':'')+h.getMinutes();}
+  function fechaL(){const f=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});return f.charAt(0).toUpperCase()+f.slice(1);}
+  function ir(id){document.querySelectorAll('.pantalla').forEach(p=>p.className='pantalla');document.getElementById(id).className='pantalla activa';document.getElementById('app').scrollTop=0;}
+  function notif(msg,dur=3500){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),dur);}
+
+  function setTema(t){document.getElementById('app').className='t-'+t;document.querySelectorAll('.tema-op').forEach(o=>o.classList.remove('on'));document.getElementById('tema-'+t).classList.add('on');localStorage.setItem('remis-tema',t);}
+  function abrirTemas(){document.getElementById('temas-ov').classList.add('v');}
+  function cerrarTemas(e){if(!e||e.target===document.getElementById('temas-ov'))document.getElementById('temas-ov').classList.remove('v');}
+
+  function toggleOjo(){const i=document.getElementById('l-pass'),o=document.getElementById('ojo');i.type=i.type==='password'?'text':'password';o.textContent=i.type==='password'?'👁':'🙈';}
+
+  async function login(){
+    const u=document.getElementById('l-user').value.trim();
+    const p=document.getElementById('l-pass').value;
+    const err=document.getElementById('l-err');
+    const btn=document.getElementById('btn-login');
+    if(!u||!p){err.style.display='block';err.textContent='⚠️ Completá usuario y contraseña.';return;}
+    btn.disabled=true;btn.textContent='Verificando...';
+    try{
+      const{data:rows,error}=await sb.from('usuarios').select('*').eq('usuario',u).eq('password_hash',p).eq('activo',true);
+      const data=rows&&rows.length>0?rows[0]:null;
+      if(error||!data){err.style.display='block';err.textContent='⚠️ Usuario o contraseña incorrectos.';btn.disabled=false;btn.textContent='🚗 Entrar a mi turno';return;}
+      if(data.vence_hasta&&new Date(data.vence_hasta)<new Date()){err.style.display='block';err.textContent='⚠️ Tu suscripción venció. Contactá al administrador.';btn.disabled=false;btn.textContent='🚗 Entrar a mi turno';return;}
+      err.style.display='none';usuario=data;
+      document.getElementById('status-rol').style.display='block';
+      document.getElementById('status-rol').textContent=data.nombre+' · '+data.rol;
+      const h=new Date().getHours();noche=(h>=20||h<6);aplicarModo();
+      if(data.rol==='admin'){await cargarAdmin();ir('p-admin');}
+      else if(data.rol==='chofer'){mostrarBienvenida(data);}
+      else{cargarDueno(data);ir('p-dueno');}
+    }catch(e){err.style.display='block';err.textContent='⚠️ Error de conexión. Intentá de nuevo.';}
+    btn.disabled=false;btn.textContent='🚗 Entrar a mi turno';
+  }
+
+  function salir(){registros=[];timers.forEach(t=>clearTimeout(t));timers=[];usuario=null;document.getElementById('status-rol').style.display='none';document.getElementById('l-user').value='';document.getElementById('l-pass').value='';actualizarUI();ir('p-login');}
+
+  function mostrarBienvenida(user){
+    const h=new Date().getHours();
+    document.getElementById('bv-num').textContent='Turno '+(user.num_turno||1);
+    document.getElementById('bv-nombre').textContent=user.nombre;
+    document.getElementById('bv-hora').textContent=((h>=6&&h<18)?'Turno día — 06:00 a 18:00':'Turno noche — 18:00 a 06:00')+' · '+fechaL();
+    document.getElementById('bv-sorteo').textContent=user.num_sorteo||'---';
+    ir('p-bienvenida');
+  }
+
+  function irApp(){document.getElementById('ch-sorteo').textContent=usuario?.num_sorteo||'---';renderProg();renderReservas();ir('p-chofer');}
+  function aplicarModo(){document.getElementById('tog-ico').textContent=noche?'☀️':'🌙';document.getElementById('tog-txt').textContent=noche?'Día':'Noche';document.getElementById('modo-lbl').textContent=noche?'Turno noche 🌙':'Turno día ☀️';}
+  function toggleModo(){noche=!noche;aplicarModo();}
+
+  function setTipo(t){
+    tipo=t;
+    ['viaje','comb','gasto','reserva'].forEach(x=>{document.getElementById('t-'+x).className='btn-tipo'+(x===t?' on':'');document.getElementById('form-'+x).style.display=x===t?'block':'none';});
+    const lb={viaje:'＋ Guardar viaje',comb:'⛽ Guardar combustible',gasto:'🍫 Guardar gasto',reserva:'⏰ Programar reserva'};
+    document.getElementById('btn-guardar').textContent=lb[t];
+  }
+  function setPago(t){pago=t;document.getElementById('b-ef').className='btn-pago'+(t==='ef'?' on':'');document.getElementById('b-vt').className='btn-pago'+(t==='vt'?' on':'');}
+  function setEst(e){estacion=e;['gnc','ypf','otra'].forEach(x=>document.getElementById('b-'+x).className='btn-pago'+(x===e.toLowerCase()?' on':''));}
+
+  async function guardar(){
+    const err=document.getElementById('v-err');
+    let monto=0,desc='';
+    if(tipo==='viaje'){monto=parseFloat(document.getElementById('v-monto').value);desc=document.getElementById('v-ref').value.trim()||'—';}
+    else if(tipo==='comb'){monto=parseFloat(document.getElementById('c-monto').value);desc=estacion;}
+    else if(tipo==='gasto'){monto=parseFloat(document.getElementById('g-monto').value);desc=document.getElementById('g-desc').value.trim()||'gasto';}
+    else if(tipo==='reserva'){
+      const d=document.getElementById('r-desc').value.trim();
+      const mins=parseInt(document.getElementById('r-mins').value);
+      const me=parseFloat(document.getElementById('r-monto').value)||0;
+      if(!d){err.style.display='block';return;}
+      err.style.display='none';
+      const ah=new Date();ah.setMinutes(ah.getMinutes()+mins);
+      const ha=ah.getHours()+':'+(ah.getMinutes()<10?'0':'')+ah.getMinutes();
+      reservas.push({desc:d,mins,montoEst:me,horaAlerta:ha,completado:false,id:Date.now()});
+      if(mins>5){const t=setTimeout(()=>notif('⏰ En 5 min: '+d,8000),(mins-5)*60000);timers.push(t);}
+      const t2=setTimeout(()=>notif('🚗 ¡Ahora! Viaje: '+d,10000),mins*60000);timers.push(t2);
+      document.getElementById('r-desc').value='';document.getElementById('r-monto').value='';
+      renderReservas();notif('✅ Reserva para las '+ha);return;
+    }
+    if(!monto||monto<=0){err.style.display='block';return;}
+    err.style.display='none';
+    const reg={monto,desc,tipo,pago:tipo==='viaje'?pago:'—',hora:horaA()};
+    registros.push(reg);
+    try{await sb.from('registros').insert({turno_id:null,tipo,monto,descripcion:desc,forma_pago:reg.pago,estacion:tipo==='comb'?estacion:null});}catch(e){}
+    ['v-monto','v-ref','c-monto','g-monto','g-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    actualizarUI();
+  }
+
+  function renderReservas(){
+    const pend=reservas.filter(r=>!r.completado);
+    const div=document.getElementById('reservas-pend');
+    if(!pend.length){div.innerHTML='';return;}
+    div.innerHTML=pend.map(r=>`<div class="alerta"><div><p style="font-size:15px;font-weight:700;color:var(--txt);">⏰ ${r.desc}</p><p style="font-size:13px;color:var(--muted);margin-top:3px;">Para las ${r.horaAlerta}${r.montoEst>0?' · Est. '+fmt(r.montoEst):''}</p></div><button onclick="completarRes(${r.id})" style="background:var(--success);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">✓</button></div>`).join('');
+  }
+  function completarRes(id){const r=reservas.find(x=>x.id===id);if(!r)return;r.completado=true;if(r.montoEst>0){registros.push({monto:r.montoEst,desc:r.desc+' (reserva)',tipo:'viaje',pago,hora:horaA()});actualizarUI();}renderReservas();notif('✅ Viaje completado registrado');}
+
+  function abrirProg(){document.getElementById('modal-prog').classList.add('v');}
+  function cerrarProg(e){if(!e||e.target===document.getElementById('modal-prog'))document.getElementById('modal-prog').classList.remove('v');}
+  function guardarProg(){
+    const d=document.getElementById('prog-desc').value.trim();
+    const h=document.getElementById('prog-hora').value;
+    const m=parseFloat(document.getElementById('prog-monto').value)||0;
+    if(!d||!h){alert('Completá descripción y horario.');return;}
+    programados.push({desc:d,hora:h,monto:m,id:Date.now()});
+    document.getElementById('prog-desc').value='';document.getElementById('prog-hora').value='';document.getElementById('prog-monto').value='';
+    cerrarProg();renderProg();notif('📅 '+d+' guardado');
+  }
+  function renderProg(){
+    const lista=document.getElementById('lista-prog');
+    if(!programados.length){lista.innerHTML='<p style="font-size:14px;color:var(--muted);text-align:center;padding:10px 0;">Sin viajes fijos aún. Agregá uno para que no se olvide nunca.</p>';return;}
+    lista.innerHTML=programados.map(p=>`<div class="prog-row"><div style="display:flex;justify-content:space-between;align-items:center;"><div><p style="font-size:15px;font-weight:600;color:var(--txt);">📅 ${p.desc}</p><p style="font-size:13px;color:var(--muted);margin-top:3px;">🕐 ${p.hora}${p.monto>0?' · '+fmt(p.monto):''}</p></div><div style="display:flex;gap:6px;"><button onclick="regProg(${p.id})" style="background:var(--success);color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;">✓</button><button onclick="borrarProg(${p.id})" style="background:var(--card);border:1px solid var(--borde);color:var(--danger);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;">✕</button></div></div></div>`).join('');
+  }
+  function regProg(id){const p=programados.find(x=>x.id===id);if(!p)return;if(p.monto>0){registros.push({monto:p.monto,desc:p.desc,tipo:'viaje',pago,hora:horaA()});actualizarUI();notif('✅ '+p.desc+' registrado');}else{notif('ℹ️ Agregá el monto para registrarlo');}}
+  function borrarProg(id){programados=programados.filter(x=>x.id!==id);renderProg();}
+
+  function actualizarUI(){
+    const vj=registros.filter(r=>r.tipo==='viaje');
+    const cb=registros.filter(r=>r.tipo==='comb');
+    const gs=registros.filter(r=>r.tipo==='gasto');
+    const totV=vj.reduce((s,r)=>s+r.monto,0);
+    const totC=cb.reduce((s,r)=>s+r.monto,0);
+    const totG=gs.reduce((s,r)=>s+r.monto,0);
+    const ef=vj.filter(r=>r.pago==='ef').reduce((s,r)=>s+r.monto,0);
+    const vt=vj.filter(r=>r.pago==='vt').reduce((s,r)=>s+r.monto,0);
+    const neto=totV*0.48-totC-totG;
+    document.getElementById('tot').textContent=fmt(totV);
+    document.getElementById('mi-parte').textContent=fmt(totV*0.30);
+    document.getElementById('nreg').textContent=registros.length+(registros.length===1?' registro':' registros');
+    document.getElementById('r-tot').textContent=fmt(totV);document.getElementById('r-ch').textContent=fmt(totV*0.30);
+    document.getElementById('r-ag').textContent=fmt(totV*0.22);document.getElementById('r-du').textContent=fmt(totV*0.48);
+    document.getElementById('r-cb').textContent=fmt(totC);document.getElementById('r-gs').textContent=fmt(totG);
+    document.getElementById('r-neto').textContent=fmt(neto);document.getElementById('r-ef').textContent=fmt(ef);document.getElementById('r-vt').textContent=fmt(vt);
+    const ico={viaje:'🚗',comb:'⛽',gasto:'🍫'};
+    const col={viaje:'var(--btnbright)',comb:'var(--danger)',gasto:'var(--warning)'};
+    const lista=document.getElementById('lista-ch');
+    if(!registros.length){lista.innerHTML='<p style="font-size:15px;color:var(--muted);text-align:center;padding:16px 0;line-height:1.6;">Todavía no hay registros.<br>¡Arrancá con el primer viaje!</p>';return;}
+    lista.innerHTML=registros.slice().reverse().map((r,i)=>{const idx=registros.length-i;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1.5px solid var(--borde);"><div><p style="font-size:16px;font-weight:600;color:var(--txt);">${ico[r.tipo]} #${idx} — ${r.desc}</p><p style="font-size:12px;color:var(--muted);margin-top:3px;">${r.hora}${r.pago!=='—'?' · '+(r.pago==='ef'?'Efectivo':'Virtual'):''}</p></div><p style="font-size:19px;font-weight:700;color:${col[r.tipo]};">${r.tipo!=='viaje'?'-':''}${fmt(r.monto)}</p></div>`;}).join('');
+  }
+
+  async function irCierre(){
+    if(!registros.length){notif('⚠️ No hay registros en este turno.');return;}
+    const vj=registros.filter(r=>r.tipo==='viaje');
+    const totV=vj.reduce((s,r)=>s+r.monto,0);
+    const totC=registros.filter(r=>r.tipo==='comb').reduce((s,r)=>s+r.monto,0);
+    const totG=registros.filter(r=>r.tipo==='gasto').reduce((s,r)=>s+r.monto,0);
+    const neto=totV*0.48-totC-totG;
+    try{await sb.from('turnos').insert({chofer_id:usuario?.id,num_turno:usuario?.num_turno||1,total_viajes:totV,monto_chofer:totV*0.30,monto_agencia:totV*0.22,monto_dueno_bruto:totV*0.48,total_combustible:totC,total_gastos:totG,monto_dueno_neto:neto,cerrado:true,fecha_cierre:new Date().toISOString()});}catch(e){}
+    document.getElementById('c-fecha').textContent=fechaL();
+    document.getElementById('c-nombre').textContent=usuario?.nombre||'';
+    document.getElementById('c-tot').textContent=fmt(totV);
+    document.getElementById('c-vj').textContent=vj.length+' viajes · '+registros.length+' registros';
+    document.getElementById('c-ch').textContent=fmt(totV*0.30);document.getElementById('c-ag').textContent=fmt(totV*0.22);
+    document.getElementById('c-cb').textContent=fmt(totC);document.getElementById('c-gs').textContent=fmt(totG);
+    document.getElementById('c-rei').textContent=fmt(Math.round(totC*0.10));document.getElementById('c-nt').textContent=fmt(neto);
+    ir('p-cierre');
+  }
+
+  function nuevoTurno(){registros=[];reservas=[];timers.forEach(t=>clearTimeout(t));timers=[];actualizarUI();ir('p-chofer');notif('🚗 Nuevo turno iniciado. ¡Éxito!');}
+
+  function armarMsg(){
+    const vj=registros.filter(r=>r.tipo==='viaje');
+    const totV=vj.reduce((s,r)=>s+r.monto,0);
+    const totC=registros.filter(r=>r.tipo==='comb').reduce((s,r)=>s+r.monto,0);
+    const totG=registros.filter(r=>r.tipo==='gasto').reduce((s,r)=>s+r.monto,0);
+    return`🚗 *Remisero — Cierre de turno*\n📅 ${new Date().toLocaleDateString('es-AR')}\n👤 ${usuario?.nombre||''}\n\n• Viajes: ${vj.length} · Total: ${fmt(totV)}\n\n💰 Distribución:\n• Chofer (30%): ${fmt(totV*0.30)}\n• Agencia (22%): ${fmt(totV*0.22)}\n• ⛽ Combustible: -${fmt(totC)}\n• 🍫 Gastos: -${fmt(totG)}\n• 💰 Dueño neto: ${fmt(totV*0.48-totC-totG)}\n\n_Remisero — remisero.com.ar_`;
+  }
+  function irWA(){window.open('https://wa.me/?text='+encodeURIComponent(armarMsg()),'_blank');}
+  function irEmail(){window.open('mailto:?subject='+encodeURIComponent('Remisero — Cierre de turno')+'&body='+encodeURIComponent(armarMsg().replace(/\*/g,'')),'_blank');}
+
+  function cargarDueno(user){document.getElementById('d-nombre').textContent=user.nombre;document.getElementById('d-sorteo').textContent=user.num_sorteo||'---';}
+
+  async function cargarAdmin(){
+    const lista=document.getElementById('lista-admin');
+    try{
+      const{data}=await sb.from('usuarios').select('*').neq('rol','admin').order('nombre');
+      if(!data||!data.length){lista.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px;">No hay usuarios todavía. Agregá el primero.</p>';return;}
+      const activos=data.filter(u=>u.activo).length;
+      document.getElementById('a-act').textContent=activos;
+      document.getElementById('a-ing').textContent=fmt(activos*PRECIO);
+      lista.innerHTML=data.map(u=>`
+        <div class="usuario-row">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div><p style="font-size:17px;font-weight:700;color:var(--txt);">${u.nombre}</p><p style="font-size:13px;color:var(--muted);margin-top:2px;">@${u.usuario} · ${u.rol==='chofer'?'🚗 Chofer':'🚘 Dueño'}</p>${u.vence_hasta?`<p style="font-size:12px;color:var(--muted);margin-top:2px;">📅 Vence: ${new Date(u.vence_hasta).toLocaleDateString('es-AR')}</p>`:''}</div>
+            <span class="${u.activo?'badge-on':'badge-off'}">${u.activo?'Activo':'Inactivo'}</span>
+          </div>
+          ${u.num_sorteo?`<p style="font-size:13px;color:var(--muted);margin-bottom:10px;">🎰 Sorteo: <strong style="color:var(--btnbright);">${u.num_sorteo}</strong></p>`:''}
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sec ${u.activo?'btn-danger':'btn-success'}" style="flex:1;" onclick="toggleActivo('${u.id}',${u.activo})">${u.activo?'🚫 Desactivar':'✅ Activar'}</button>
+            <button class="btn-sec" style="flex:1;" onclick="renovar('${u.id}')">🔄 Renovar 30d</button>
+          </div>
+        </div>`).join('');
+    }catch(e){lista.innerHTML='<p style="color:var(--danger);text-align:center;padding:20px;">Error cargando usuarios.</p>';}
+  }
+
+  async function toggleActivo(id,activo){
+    try{await sb.from('usuarios').update({activo:!activo}).eq('id',id);await cargarAdmin();notif(activo?'🚫 Usuario desactivado':'✅ Usuario activado');}
+    catch(e){notif('❌ Error al cambiar estado');}
+  }
+
+  async function renovar(id){
+    try{const n=new Date();n.setDate(n.getDate()+30);await sb.from('usuarios').update({activo:true,vence_hasta:n.toISOString().split('T')[0]}).eq('id',id);await cargarAdmin();notif('✅ Renovado 30 días');}
+    catch(e){notif('❌ Error al renovar');}
+  }
+
+  function mostrarTab(t){
+    ['u','s','n'].forEach(s=>{document.getElementById('sec-'+s).style.display=s===t?'block':'none';document.getElementById('tab-'+s).className='tab-btn'+(s===t?' on':'');});
+    if(t==='u')cargarAdmin();
+    if(t==='s')cargarSorteo();
+  }
+
+  async function cargarSorteo(){
+    try{
+      const{data}=await sb.from('usuarios').select('nombre,usuario,rol,num_sorteo').neq('rol','admin').not('num_sorteo','is',null).order('num_sorteo');
+      window._sorteoU=data||[];
+      document.getElementById('lista-nums').innerHTML=data?.map(u=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1.5px solid var(--borde);"><div><p style="font-size:15px;color:var(--txt);font-weight:600;">${u.nombre}</p><p style="font-size:12px;color:var(--muted);margin-top:2px;">@${u.usuario} · ${u.rol}</p></div><span class="badge-sorteo" style="font-size:15px;padding:5px 14px;">${u.num_sorteo}</span></div>`).join('')||'';
+    }catch(e){}
+  }
+
+  function realizarSorteo(){
+    const a=window._sorteoU||[];if(!a.length){notif('No hay usuarios con número de sorteo.');return;}
+    let c=0;const d=document.getElementById('sort-disp');document.getElementById('sort-gan').style.display='none';
+    const anim=setInterval(()=>{const r=a[Math.floor(Math.random()*a.length)];d.textContent=r.num_sorteo;c++;
+      if(c>=25){clearInterval(anim);const g=a[Math.floor(Math.random()*a.length)];d.textContent=g.num_sorteo;document.getElementById('sort-nombre').textContent='🏆 '+g.nombre;document.getElementById('sort-num').textContent='Número: '+g.num_sorteo;document.getElementById('sort-gan').style.display='block';notif('🎉 ¡Ganó '+g.nombre+'!',6000);}
+    },100);
+  }
+
+  let rolNuevoA='chofer';
+  function setRol(r){rolNuevoA=r;document.getElementById('r-ch').className='btn-pago'+(r==='chofer'?' on':'');document.getElementById('r-du').className='btn-pago'+(r==='dueno'?' on':'');}
+
+  async function agregarUsuario(){
+    const n=document.getElementById('n-nombre').value.trim();
+    const t=document.getElementById('n-tel').value.trim();
+    const p=document.getElementById('n-pass').value.trim();
+    const err=document.getElementById('n-err');
+    const btn=document.getElementById('btn-agregar');
+    if(!n||!t||!p){err.style.display='block';return;}
+    err.style.display='none';btn.disabled=true;btn.textContent='Guardando...';
+    const num=String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+    const v=new Date();v.setDate(v.getDate()+30);
+    try{
+      const{error}=await sb.from('usuarios').insert({nombre:n,usuario:t,password_hash:p,rol:rolNuevoA,activo:true,num_sorteo:num,vence_hasta:v.toISOString().split('T')[0],num_turno:1});
+      if(error){err.style.display='block';err.textContent='❌ Ese usuario ya existe.';}
+      else{['n-nombre','n-tel','n-pass'].forEach(id=>document.getElementById(id).value='');notif('✅ '+n+' agregado · Sorteo: '+num);mostrarTab('u');}
+    }catch(e){err.style.display='block';err.textContent='❌ Error al guardar.';}
+    btn.disabled=false;btn.textContent='➕ Agregar usuario';
+  }
+
+  const t=localStorage.getItem('remis-tema')||'azul';setTema(t);
+  setInterval(()=>{const h=new Date();document.getElementById('hora-s').textContent=h.getHours()+':'+(h.getMinutes()<10?'0':'')+h.getMinutes();},1000);
+</script>
+</body>
+</html>
